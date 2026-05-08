@@ -2,8 +2,9 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { authAPI } from '../services/api';
 import type { User } from '../types';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -17,6 +18,7 @@ export const useAuthProvider = () => {
     const stored = localStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
   });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export const useAuthProvider = () => {
     const res = await authAPI.login({ email, password });
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
+    setToken(res.data.token);
     setUser(res.data.user);
   };
 
@@ -40,16 +43,18 @@ export const useAuthProvider = () => {
     const res = await authAPI.register({ name, email, password });
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
+    setToken(res.data.token);
     setUser(res.data.user);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setToken(null);
     setUser(null);
   };
 
-  return { user, loading, login, register, logout };
+  return { user, token, loading, login, register, logout };
 };
 
 export const useAuth = () => {
