@@ -152,6 +152,8 @@ JWT_EXPIRES_IN=7d
 NODE_ENV=development
 ```
 
+> **Note for macOS users:** Port 5000 is occupied by AirPlay Receiver on macOS Ventura and later. This project uses port 5001 by default to avoid that conflict. To use port 5000 instead, disable AirPlay Receiver in **System Settings → General → AirDrop & Handoff**.
+
 ---
 
 ## API Reference
@@ -182,7 +184,7 @@ NODE_ENV=development
 | Param | Description |
 |---|---|
 | `search` | Full-text search (≥3 chars) or regex (<3 chars) |
-| `groupId` | Filter by group ID |
+| `group` | Filter by group ID |
 | `favorite` | `true` to show favorites only |
 | `page` | Page number (default: 1) |
 | `limit` | Results per page (default: 20, max: 100) |
@@ -221,3 +223,4 @@ Tags should be semicolon or comma separated within the cell. Rows missing `first
 - **Group deletion** — Deleting a group sets `groupId: null` on all its contacts rather than cascading deletes, preserving contact data.
 - **Separate upload configs** — Avatar uploads (images only, 5 MB) and CSV imports use separate Multer instances to enforce correct MIME type validation per endpoint.
 - **FormData for contacts** — Because avatar upload uses `multipart/form-data`, nested objects (address, socialLinks) are sent as JSON strings and parsed on the server.
+- **CORS allows any localhost port** — The dev CORS policy accepts any `http://localhost:*` origin so the frontend works regardless of which port Vite assigns (5173, 5174, etc.).
