@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { LayoutGrid, List, Plus, Download, Search } from 'lucide-react';
+import { LayoutGrid, List, Plus, Download, Search, Upload } from 'lucide-react';
 import type { Contact, Group, ViewMode } from '../types';
 import { contactsAPI, groupsAPI } from '../services/api';
 import { useDebounce } from '../hooks/useDebounce';
@@ -12,6 +12,7 @@ import ContactForm from '../components/ContactForm';
 import DetailPanel from '../components/DetailPanel';
 import GroupModal from '../components/GroupModal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ImportModal from '../components/ImportModal';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -34,6 +35,8 @@ export default function ContactsPage() {
 
   const [confirmDelete, setConfirmDelete] = useState<{ type: 'contact' | 'group'; item: Contact | Group } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [favoriteContacts, setFavoriteContacts] = useState<Contact[]>([]);
 
   const fetchContacts = useCallback(async () => {
     setLoading(true);
@@ -64,8 +67,9 @@ export default function ContactsPage() {
 
   const fetchFavoriteCount = useCallback(async () => {
     try {
-      const res = await contactsAPI.getAll({ favorite: 'true' });
+      const res = await contactsAPI.getAll({ favorite: 'true', limit: '100' });
       setFavoriteCount(res.data.total);
+      setFavoriteContacts(res.data.contacts);
     } catch {
       // silent
     }
@@ -186,6 +190,14 @@ export default function ContactsPage() {
     }
   };
 
+  const handleImported = (count: number) => {
+    toast.success(`Imported ${count} contact${count !== 1 ? 's' : ''}`);
+    setShowImport(false);
+    fetchContacts();
+    fetchFavoriteCount();
+    fetchGroups();
+  };
+
   const openEditContact = (contact: Contact) => {
     setEditingContact(contact);
     setShowContactForm(true);
@@ -248,6 +260,9 @@ export default function ContactsPage() {
                 <List size={16} />
               </button>
             </div>
+            <button className="btn btn-secondary" onClick={() => setShowImport(true)} title="Import CSV">
+              <Upload size={15} /> Import
+            </button>
             <button className="btn btn-secondary" onClick={handleExport} title="Export CSV">
               <Download size={15} /> Export
             </button>
@@ -258,6 +273,25 @@ export default function ContactsPage() {
         </div>
 
         <div className="content-area">
+          {activeGroup === 'all' && !debouncedSearch && favoriteContacts.length > 0 && (
+            <div className="favorites-section">
+              <div className="section-label">Pinned Favorites</div>
+              <div className="favorites-row">
+                {favoriteContacts.slice(0, 8).map(c => (
+                  <button
+                    key={c._id}
+                    className="favorite-chip"
+                    onClick={() => setSelectedContact(c)}
+                    title={`${c.firstName} ${c.lastName}`.trim()}
+                  >
+                    <Avatar name={`${c.firstName} ${c.lastName}`.trim()} avatarUrl={c.avatarUrl} size="sm" />
+                    <span>{c.firstName}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <div className="empty-state">
               <span className="spinner" style={{ width: 32, height: 32 }} />
@@ -327,6 +361,13 @@ export default function ContactsPage() {
           group={editingGroup}
           onSubmit={handleGroupSubmit}
           onClose={() => { setShowGroupModal(false); setEditingGroup(null); }}
+        />
+      )}
+
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onImported={handleImported}
         />
       )}
 

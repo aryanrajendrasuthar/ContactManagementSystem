@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { upload, uploadCsv } = require('../middleware/upload');
 const {
   getContacts,
   getContact,
@@ -8,13 +8,14 @@ const {
   updateContact,
   deleteContact,
   toggleFavorite,
-  exportContacts
+  exportContacts,
+  importContacts
 } = require('../controllers/contactController');
 
 const router = express.Router();
 
 router.get('/export', protect, exportContacts);
-router.post('/import', protect, (req, res) => res.json({ success: true, message: 'Phase 4 will implement CSV import' }));
+router.post('/import', protect, uploadCsv.single('csv'), importContacts);
 
 router.route('/')
   .get(protect, getContacts)

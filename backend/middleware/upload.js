@@ -30,4 +30,19 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-module.exports = upload;
+const csvFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ext === '.csv' || file.mimetype === 'text/csv' || file.mimetype === 'application/vnd.ms-excel') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only CSV files are allowed'), false);
+  }
+};
+
+const uploadCsv = multer({
+  storage,
+  fileFilter: csvFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
+
+module.exports = { upload, uploadCsv };

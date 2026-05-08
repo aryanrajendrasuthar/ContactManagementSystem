@@ -1,4 +1,6 @@
 const { stringify } = require('csv-stringify/sync');
+const { parse } = require('csv-parse/sync');
+const fs = require('fs');
 const Contact = require('../models/Contact');
 
 const getContacts = async (req, res) => {
@@ -186,7 +188,8 @@ const toggleFavorite = async (req, res) => {
     contact.isFavorite = !contact.isFavorite;
     await contact.save();
 
-    res.json({ success: true, isFavorite: contact.isFavorite });
+    const populated = await Contact.findById(contact._id).populate('groupId', 'name color').lean();
+    res.json({ success: true, contact: populated });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -229,6 +232,81 @@ const exportContacts = async (req, res) => {
   }
 };
 
+const importContacts = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No CSV file uploaded' });
+  }
+
+  try {
+    const content = fs.readFileSync(req.file.path, 'utf-8');
+    const rows = parse(content, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
+    });
+
+    if (!rows.length) {
+      return res.status(400).json({ success: false, message: 'CSV file is empty' });
+    }
+
+    const contacts = rows.map(row => {
+      const contact = {
+        userId: req.user._id,
+        firstName: row.firstName || row.first_name || row['First Name'] || '',
+        lastName: row.lastName || row.last_name || row['Last Name'] || '',
+        email: row.email || row.Email || '',
+        phone: row.phone || row.Phone || '',
+        company: row.company || row.Company || '',
+        notes: row.notes || row.Notes || '',
+        isFavorite: row.isFavorite === 'true' || row.favorite === 'true',
+      };
+
+      const tagsRaw = row.tags || row.Tags || '';
+      if (tagsRaw) {
+        contact.tags = tagsRaw.split(/[;,]/).map(t => t.trim()).filter(Boolean);
+      }
+
+      const street = row.street || row.Street || '';
+      const city = row.city || row.City || '';
+      const state = row.state || row.State || '';
+      const country = row.country || row.Country || '';
+      const zip = row.zip || row.ZIP || row.Zip || '';
+      if (street || city || state || country || zip) {
+        contact.address = { street, city, state, country, zip };
+      }
+
+      const linkedin = row.linkedin || row.LinkedIn || '';
+      const twitter = row.twitter || row.Twitter || '';
+      const github = row.github || row.GitHub || '';
+      const website = row.website || row.Website || '';
+      if (linkedin || twitter || github || website) {
+        contact.socialLinks = { linkedin, twitter, github, website };
+      }
+
+      return contact;
+    }).filter(c => c.firstName);
+
+    if (!contacts.length) {
+      return res.status(400).json({ success: false, message: 'No valid contacts found (firstName is required)' });
+    }
+
+    const inserted = await Contact.insertMany(contacts, { ordered: false });
+
+    fs.unlinkSync(req.file.path);
+
+    res.status(201).json({
+      success: true,
+      imported: inserted.length,
+      message: `Successfully imported ${inserted.length} contact${inserted.length !== 1 ? 's' : ''}`
+    });
+  } catch (error) {
+    if (req.file?.path) {
+      try { fs.unlinkSync(req.file.path); } catch {}
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getContact,
@@ -236,5 +314,6 @@ module.exports = {
   updateContact,
   deleteContact,
   toggleFavorite,
-  exportContacts
+  exportContacts,
+  importContacts
 };
