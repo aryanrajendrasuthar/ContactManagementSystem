@@ -9,7 +9,13 @@ connectDB();
 const app = express();
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production'
+    ? false
+    : (origin, cb) => {
+        // Allow any localhost port in development
+        if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) cb(null, true);
+        else cb(new Error('Not allowed by CORS'));
+      },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));

@@ -126,7 +126,7 @@ cp .env.example .env
 npm run dev
 ```
 
-The API server starts on **http://localhost:5000**.
+The API server starts on **http://localhost:5001**.
 
 ### 3. Frontend setup
 
@@ -145,7 +145,7 @@ The React app starts on **http://localhost:5173**.
 Create `backend/.env` (see `.env.example`):
 
 ```env
-PORT=5000
+PORT=5001
 MONGODB_URI=mongodb://localhost:27017/contact-management
 JWT_SECRET=your_super_secret_key_here
 JWT_EXPIRES_IN=7d
