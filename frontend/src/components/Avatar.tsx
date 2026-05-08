@@ -21,7 +21,7 @@ export default function Avatar({ name, avatarUrl, size = 'md', className }: Avat
     <div className={cls}>
       {avatarUrl ? (
         <img
-          src={avatarUrl.startsWith('/uploads') ? `http://localhost:5000${avatarUrl}` : avatarUrl}
+          src={avatarUrl.startsWith('/uploads') ? `http://localhost:5001${avatarUrl}` : avatarUrl}
           alt={name}
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
         />

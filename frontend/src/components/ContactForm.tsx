@@ -46,7 +46,7 @@ export default function ContactForm({ contact, groups, onSubmit, onClose }: Prop
         github: contact.socialLinks?.github || '',
         website: contact.socialLinks?.website || '',
       });
-      if (contact.avatarUrl) setAvatarPreview(contact.avatarUrl.startsWith('/uploads') ? `http://localhost:5000${contact.avatarUrl}` : contact.avatarUrl);
+      if (contact.avatarUrl) setAvatarPreview(contact.avatarUrl.startsWith('/uploads') ? `http://localhost:5001${contact.avatarUrl}` : contact.avatarUrl);
     }
   }, [contact]);
 

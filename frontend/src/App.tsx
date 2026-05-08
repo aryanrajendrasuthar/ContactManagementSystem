@@ -6,13 +6,15 @@ import RegisterPage from './pages/RegisterPage';
 import ContactsPage from './pages/ContactsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+  const { token, loading } = useAuth();
+  if (loading) return null;
+  return (token ?? localStorage.getItem('token')) ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
-  return token ? <Navigate to="/" replace /> : <>{children}</>;
+  const { token, loading } = useAuth();
+  if (loading) return null;
+  return (token ?? localStorage.getItem('token')) ? <Navigate to="/" replace /> : <>{children}</>;
 }
 
 export default function App() {

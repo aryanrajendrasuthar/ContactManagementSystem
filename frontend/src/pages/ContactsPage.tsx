@@ -67,7 +67,7 @@ export default function ContactsPage() {
   const fetchGroups = useCallback(async () => {
     try {
       const res = await groupsAPI.getAll();
-      setGroups(res.data);
+      setGroups(res.data.groups);
     } catch {
       // silent
     }
@@ -273,10 +273,10 @@ export default function ContactsPage() {
               </button>
             </div>
             <button className="btn btn-secondary" onClick={() => setShowImport(true)} title="Import CSV">
-              <Upload size={15} /> Import
+              <Download size={15} /> Import
             </button>
             <button className="btn btn-secondary" onClick={handleExport} title="Export CSV">
-              <Download size={15} /> Export
+              <Upload size={15} /> Export
             </button>
             <button className="btn btn-primary" onClick={openNewContact}>
               <Plus size={15} /> New Contact
