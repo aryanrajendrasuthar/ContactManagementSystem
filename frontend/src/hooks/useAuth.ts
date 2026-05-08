@@ -27,7 +27,12 @@ export const useAuthProvider = () => {
 
     authAPI.getMe()
       .then(res => { setUser(res.data.user); })
-      .catch(() => { localStorage.removeItem('token'); localStorage.removeItem('user'); })
+      .catch(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setToken(null);
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 

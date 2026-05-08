@@ -44,17 +44,25 @@ export default function ContactsPage() {
       const params: Record<string, string> = {};
       if (debouncedSearch) params.search = debouncedSearch;
       if (activeGroup === 'favorites') params.favorite = 'true';
-      else if (activeGroup !== 'all') params.groupId = activeGroup;
+      else if (activeGroup !== 'all') params.group = activeGroup;
 
       const res = await contactsAPI.getAll(params);
       setContacts(res.data.contacts);
-      setTotalContacts(res.data.total);
     } catch {
       toast.error('Failed to load contacts');
     } finally {
       setLoading(false);
     }
   }, [debouncedSearch, activeGroup]);
+
+  const fetchTotalCount = useCallback(async () => {
+    try {
+      const res = await contactsAPI.getAll({ limit: '1' });
+      setTotalContacts(res.data.total);
+    } catch {
+      // silent
+    }
+  }, []);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -82,7 +90,8 @@ export default function ContactsPage() {
   useEffect(() => {
     fetchGroups();
     fetchFavoriteCount();
-  }, [fetchGroups, fetchFavoriteCount]);
+    fetchTotalCount();
+  }, [fetchGroups, fetchFavoriteCount, fetchTotalCount]);
 
   const handleCreateContact = async (data: FormData) => {
     await contactsAPI.create(data);
@@ -91,6 +100,7 @@ export default function ContactsPage() {
     setEditingContact(undefined);
     fetchContacts();
     fetchFavoriteCount();
+    fetchTotalCount();
   };
 
   const handleUpdateContact = async (data: FormData) => {
@@ -113,6 +123,7 @@ export default function ContactsPage() {
       if (selectedContact?._id === (confirmDelete.item as Contact)._id) setSelectedContact(null);
       fetchContacts();
       fetchFavoriteCount();
+      fetchTotalCount();
     } catch {
       toast.error('Failed to delete contact');
     } finally {
@@ -196,6 +207,7 @@ export default function ContactsPage() {
     fetchContacts();
     fetchFavoriteCount();
     fetchGroups();
+    fetchTotalCount();
   };
 
   const openEditContact = (contact: Contact) => {
